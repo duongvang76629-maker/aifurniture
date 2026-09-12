@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>aifurniture.lol · 让 AI 设计你的家</title>
+<meta name="description" content="上传户型、照片或一句话描述，在统一画布上与 AI 设计 Agent 对话，秒级迭代空间方案并导出 4K 效果图。" />
+<meta name="theme-color" content="#0e0c0a" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffc28a'/%3E%3Cstop offset='1' stop-color='%23b96f2f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M6.5 15.5 16 7.5l9.5 8' fill='none' stroke='%231a1208' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M9.5 14v11h13V14' fill='none' stroke='%231a1208' stroke-width='2.4' stroke-linejoin='round'/%3E%3Cpath d='M14 25v-6h4v6' fill='none' stroke='%231a1208' stroke-width='2.4'/%3E%3C/svg%3E" />
 <style>
 /* ============================================================
    aifurniture.lol — 首页 Landing
@@ -565,6 +568,7 @@ h2.title{font-size:clamp(30px,4vw,46px);font-weight:800;letter-spacing:-.5px;lin
 const I18N = {
   zh: {
     docTitle:"aifurniture.lol · 让 AI 设计你的家",
+    metaDesc:"上传户型、照片或一句话描述，在统一画布上与 AI 设计 Agent 对话，秒级迭代空间方案并导出 4K 效果图。",
     brandSub:"AI 家居设计",
     navFeat:"能力", navCases:"案例", navHow:"如何使用",
     navFeat2:"能力", navCases2:"案例", navApp:"进入工作台",
@@ -608,6 +612,7 @@ const I18N = {
   },
   en: {
     docTitle:"aifurniture.lol · AI interior design, in one sentence",
+    metaDesc:"Upload a floor plan, photo, or one sentence. Chat with an AI design agent on a unified canvas, iterate in seconds, and export 4K renders.",
     brandSub:"AI Home Design",
     navFeat:"Features", navCases:"Showcase", navHow:"How it works",
     navFeat2:"Features", navCases2:"Showcase", navApp2:"Open Studio", navApp:"Open Studio",
@@ -655,6 +660,8 @@ function applyLang(lang){
   const dict = I18N[lang] || I18N.zh;
   document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
   document.title = dict.docTitle;
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if(metaDesc && dict.metaDesc) metaDesc.content = dict.metaDesc;
   document.querySelectorAll("[data-i18n]").forEach(el=>{
     const key = el.getAttribute("data-i18n");
     if(dict[key] !== undefined) el.textContent = dict[key];

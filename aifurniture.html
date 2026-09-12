@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>aifurniture.lol · Agentic 空间智能</title>
+<meta name="description" content="面向物理空间的设计智能体：多模态输入、无限协同画布、局部重绘、材质替换与空间漫游，对话式完成空间方案迭代。" />
+<meta name="theme-color" content="#0e0c0a" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffc28a'/%3E%3Cstop offset='1' stop-color='%23b96f2f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M6.5 15.5 16 7.5l9.5 8' fill='none' stroke='%231a1208' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M9.5 14v11h13V14' fill='none' stroke='%231a1208' stroke-width='2.4' stroke-linejoin='round'/%3E%3Cpath d='M14 25v-6h4v6' fill='none' stroke='%231a1208' stroke-width='2.4'/%3E%3C/svg%3E" />
 <style>
 /* ============================================================
    aifurniture.lol — 家居设计 · Agentic 空间智能
@@ -652,6 +655,7 @@ h2.title{
 const I18N = {
   zh: {
     docTitle:"aifurniture.lol · Agentic 空间智能",
+    metaDesc:"面向物理空间的设计智能体：多模态输入、无限协同画布、局部重绘、材质替换与空间漫游，对话式完成空间方案迭代。",
     brandSub:"家居设计",
     navCap:"核心能力", navFlow:"工作流", navAud:"适用场景",
     navCap2:"核心能力", navFlow2:"工作流", navAud2:"适用场景",
@@ -691,6 +695,7 @@ const I18N = {
   },
   en: {
     docTitle:"aifurniture.lol · Agentic Spatial Intelligence",
+    metaDesc:"A design agent for physical spaces: multimodal input, infinite canvas, local inpainting, material swaps, and walkthrough videos — all conversational.",
     brandSub:"Home Design",
     navCap:"Capabilities", navFlow:"Workflow", navAud:"Use Cases",
     navCap2:"Capabilities", navFlow2:"Workflow", navAud2:"Use Cases",
@@ -734,6 +739,8 @@ function applyLang(lang){
   const dict = I18N[lang] || I18N.zh;
   document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
   document.title = dict.docTitle;
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if(metaDesc && dict.metaDesc) metaDesc.content = dict.metaDesc;
   document.querySelectorAll("[data-i18n]").forEach(el=>{
     const key = el.getAttribute("data-i18n");
     if(dict[key] !== undefined) el.textContent = dict[key];
