@@ -1,0 +1,69 @@
+:root {
+  --bg: #0e0c0a;
+  --surface: rgba(255, 244, 230, 0.045);
+  --border: rgba(255, 225, 190, 0.12);
+  --text: #f5ead9;
+  --text-2: #c9b8a0;
+  --text-3: #8d7d68;
+  --amber: #e8a35c;
+  --amber-2: #ffc28a;
+  --green: #7fe0a2;
+  --red: #e88a7a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.wrap { max-width: 860px; margin: 0 auto; padding: 72px 28px 96px; }
+
+.head { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+.mark {
+  width: 40px; height: 40px; border-radius: 11px; flex: none;
+  background: linear-gradient(135deg, var(--amber-2), #b96f2f);
+  display: grid; place-items: center; color: #1a1208; font-weight: 900;
+}
+h1 { font-size: 26px; font-weight: 800; }
+.subtitle { color: var(--text-2); margin: 10px 0 6px; }
+.progress { color: var(--amber); font-weight: 700; font-size: 14px; margin-bottom: 34px; }
+
+.group { margin-bottom: 26px; }
+.group h2 {
+  font-size: 12px; letter-spacing: 2px; color: var(--text-3);
+  text-transform: uppercase; margin-bottom: 10px; font-weight: 700;
+}
+.row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border: 1px solid var(--border);
+  border-radius: 12px; background: var(--surface); margin-bottom: 8px;
+  font-size: 14.5px;
+}
+.row .key { color: var(--text-3); font-size: 12.5px; font-family: ui-monospace, monospace; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.dot.ok { background: var(--green); box-shadow: 0 0 10px rgba(127, 224, 162, 0.6); }
+.dot.no { background: var(--red); }
+.spacer { flex: 1; }
+
+.actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 36px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 22px; border-radius: 999px; font-size: 14.5px; font-weight: 600;
+  border: 1px solid rgba(255, 210, 150, 0.28); color: var(--text);
+  transition: all 0.2s ease;
+}
+.btn:hover { border-color: var(--amber); transform: translateY(-1px); }
+.btn.primary {
+  background: linear-gradient(135deg, var(--amber-2), #b96f2f);
+  color: #1a1208; border-color: transparent;
+}
+.note { margin-top: 22px; font-size: 13px; color: var(--text-3); }
+code {
+  font-family: ui-monospace, monospace; color: var(--amber-2);
+  background: rgba(232, 163, 92, 0.1); padding: 1px 6px; border-radius: 5px;
+}
