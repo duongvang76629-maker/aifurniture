@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/translate",
-      "schedule": "* * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
