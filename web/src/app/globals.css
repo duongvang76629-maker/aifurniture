@@ -67,3 +67,187 @@ code {
   font-family: ui-monospace, monospace; color: var(--amber-2);
   background: rgba(232, 163, 92, 0.1); padding: 1px 6px; border-radius: 5px;
 }
+
+/* ============================================================================
+ * 工作台 /studio
+ * ==========================================================================*/
+.studio { max-width: 1180px; margin: 0 auto; padding: 26px 28px 96px; }
+
+.studio-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 46px;
+}
+.brand { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; color: var(--text); }
+.brand .mark {
+  width: 32px; height: 32px; border-radius: 9px; font-size: 13px;
+  background: linear-gradient(135deg, var(--amber-2), #b96f2f);
+  display: grid; place-items: center; color: #1a1208; font-weight: 900;
+}
+.brand strong { font-size: 16px; letter-spacing: 0.2px; }
+.studio-nav { display: flex; align-items: center; gap: 20px; font-size: 14px; }
+.studio-nav a { color: var(--text-2); text-decoration: none; transition: color 0.2s; }
+.studio-nav a:hover { color: var(--amber-2); }
+.mock-badge {
+  font-size: 12px; font-weight: 700; color: var(--amber-2);
+  border: 1px solid rgba(232, 163, 92, 0.4); border-radius: 999px;
+  padding: 3px 11px; background: rgba(232, 163, 92, 0.08);
+}
+
+.composer {
+  border: 1px solid var(--border); border-radius: 18px;
+  background: var(--surface); padding: 30px 30px 22px; margin-bottom: 52px;
+}
+.composer h1 { font-size: 22px; margin-bottom: 6px; }
+.composer-hint { color: var(--text-2); font-size: 14px; margin-bottom: 20px; }
+
+.styles { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 16px; }
+.style-chip {
+  padding: 8px 17px; border-radius: 999px; font-size: 13.5px;
+  color: var(--text-2); background: transparent;
+  border: 1px solid var(--border); cursor: pointer; transition: all 0.18s;
+}
+.style-chip:hover { color: var(--text); border-color: rgba(255, 210, 150, 0.4); }
+.style-chip.active {
+  color: #1a1208; font-weight: 700; border-color: transparent;
+  background: linear-gradient(135deg, var(--amber-2), #d98f43);
+}
+
+.prompt-box {
+  width: 100%; resize: vertical; border-radius: 13px;
+  background: rgba(14, 12, 10, 0.55); color: var(--text);
+  border: 1px solid var(--border); padding: 14px 16px; font-size: 15px;
+  font-family: inherit; line-height: 1.7; outline: none;
+  transition: border-color 0.2s;
+}
+.prompt-box::placeholder { color: var(--text-3); }
+.prompt-box:focus { border-color: rgba(232, 163, 92, 0.55); }
+
+.composer-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; margin-top: 14px;
+}
+.form-error { color: var(--red); font-size: 13.5px; }
+.btn.primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+.gallery-head h2 {
+  font-size: 15px; color: var(--text-2); font-weight: 700; margin-bottom: 16px;
+}
+.empty { color: var(--text-3); font-size: 14px; padding: 26px 0 10px; }
+
+.grid {
+  display: grid; gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.card {
+  border: 1px solid var(--border); border-radius: 15px; overflow: hidden;
+  background: var(--surface); transition: transform 0.2s, border-color 0.2s;
+  cursor: pointer; outline: none;
+}
+.card:hover, .card:focus-visible {
+  transform: translateY(-2px); border-color: rgba(255, 210, 150, 0.3);
+  box-shadow: 0 14px 40px -22px rgba(0, 0, 0, 0.6);
+}
+.card img {
+  display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
+}
+.card-body { padding: 12px 14px 14px; }
+.card-body p {
+  font-size: 13.5px; color: var(--text-2);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-pending, .card-failed {
+  aspect-ratio: 4 / 3; display: grid; place-items: center; align-content: center;
+  gap: 10px; color: var(--text-3); font-size: 14px;
+  background: rgba(14, 12, 10, 0.4); text-align: center; padding: 16px;
+}
+.card-failed { color: var(--red); }
+.card-failed-reason { font-size: 12px; color: var(--text-3); line-height: 1.5; }
+
+.spinner {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid rgba(232, 163, 92, 0.25);
+  border-top-color: var(--amber); animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============================================================================
+ * 方案详情模态
+ * ==========================================================================*/
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 28px; animation: fade-in 0.2s ease;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  position: relative; max-width: 920px; width: 100%;
+  max-height: calc(100vh - 56px); overflow: auto;
+  background: #15120e; border: 1px solid var(--border);
+  border-radius: 18px; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.85);
+  animation: pop-in 0.25s cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+@keyframes pop-in { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.modal-close {
+  position: absolute; top: 14px; right: 14px; z-index: 1;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(14, 12, 10, 0.7); color: var(--text);
+  border: 1px solid var(--border); font-size: 20px; line-height: 1;
+  display: grid; place-items: center; cursor: pointer;
+  transition: all 0.18s;
+}
+.modal-close:hover {
+  background: rgba(232, 163, 92, 0.15); border-color: var(--amber);
+}
+
+.modal-img {
+  display: block; width: 100%; max-height: 70vh; object-fit: contain;
+  background: #0e0c0a;
+}
+.modal-pending {
+  display: grid; place-items: center; gap: 12px;
+  height: 50vh; color: var(--text-2); text-align: center;
+  background: rgba(14, 12, 10, 0.5);
+}
+.modal-reason { font-size: 13px; color: var(--text-3); }
+
+.modal-body { padding: 22px 26px 26px; }
+.modal-prompt {
+  font-size: 16px; line-height: 1.7; color: var(--text);
+  margin-bottom: 16px; white-space: pre-wrap; word-break: break-word;
+}
+.modal-meta {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 12.5px; color: var(--text-3);
+  border-top: 1px solid var(--border); padding-top: 14px;
+  margin-bottom: 18px; word-break: break-word;
+}
+.modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn.ghost {
+  background: transparent; color: var(--text-2);
+  border: 1px solid var(--border);
+}
+.btn.ghost:hover { color: var(--text); border-color: var(--amber); }
+
+/* ============================================================================
+ * 响应式
+ * ==========================================================================*/
+@media (max-width: 640px) {
+  .wrap { padding: 40px 18px 80px; }
+  .studio { padding: 20px 16px 60px; }
+  .studio-top { margin-bottom: 28px; }
+  .composer { padding: 22px 18px 18px; margin-bottom: 32px; }
+  .composer h1 { font-size: 19px; }
+  .styles { gap: 7px; }
+  .style-chip { padding: 7px 13px; font-size: 12.5px; }
+  .grid { grid-template-columns: 1fr; gap: 14px; }
+  .modal-backdrop { padding: 0; }
+  .modal { border-radius: 0; min-height: 100vh; max-height: 100vh; }
+  .modal-img { max-height: 50vh; }
+  .modal-body { padding: 18px; }
+  .modal-close { top: 10px; right: 10px; }
+}

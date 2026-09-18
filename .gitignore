@@ -1,0 +1,6 @@
+# 云隧道工具（本地运行用，不入库）
+cloudflared.exe
+cloudflared
+
+# TRAE 工作文档
+.trae/
