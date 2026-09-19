@@ -87,6 +87,7 @@ code {
 .studio-nav { display: flex; align-items: center; gap: 20px; font-size: 14px; }
 .studio-nav a { color: var(--text-2); text-decoration: none; transition: color 0.2s; }
 .studio-nav a:hover { color: var(--amber-2); }
+.login-disabled { color: var(--text-2); opacity: 0.45; cursor: not-allowed; }
 .mock-badge {
   font-size: 12px; font-weight: 700; color: var(--amber-2);
   border: 1px solid rgba(232, 163, 92, 0.4); border-radius: 999px;

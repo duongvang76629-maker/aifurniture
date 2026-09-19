@@ -144,7 +144,9 @@ export default function StudioClient({
         <nav className="studio-nav">
           {mock && <span className="mock-badge">Mock 模式</span>}
           <a href="/config">配置</a>
-          <a href="/api/auth/signin/google">登录</a>
+          <span className="login-disabled" title="登录功能即将开放，当前可免登录试用全部功能">
+            登录
+          </span>
         </nav>
       </header>
 
