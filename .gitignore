@@ -4,3 +4,6 @@ cloudflared
 
 # TRAE 工作文档
 .trae/
+
+.vercel
+.env*

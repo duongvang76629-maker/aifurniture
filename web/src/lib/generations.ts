@@ -28,10 +28,29 @@ export interface GenerationRow {
 const RETURN_COLUMNS =
   "id, user_id, prompt, prompt_en, status, image_url, error, to_char(created_at, 'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') AS created_at";
 
-/** Mock 模式成品图：站点内置风格示例图（public/mock/{style}.jpg），按风格映射 */
-function mockImageUrl(style?: string): string {
+/** 房间类型关键词映射：按优先级排序，先匹配先返回 */
+const ROOM_KEYWORDS: Array<{ room: string; pattern: RegExp }> = [
+  { room: "bedroom", pattern: /卧室|主卧|次卧|bedroom/i },
+  { room: "kitchen", pattern: /厨房|橱柜|kitchen/i },
+  { room: "dining", pattern: /餐厅|饭厅|dining/i },
+  { room: "study", pattern: /书房|办公|study/i },
+  { room: "bathroom", pattern: /卫生间|浴室|洗手间|卫浴|bathroom/i },
+  { room: "living", pattern: /客厅|起居室|living/i },
+];
+
+/** 从用户提示词中识别房间类型，默认客厅 */
+function detectRoom(prompt: string): string {
+  for (const { room, pattern } of ROOM_KEYWORDS) {
+    if (pattern.test(prompt)) return room;
+  }
+  return "living";
+}
+
+/** Mock 模式成品图：public/mock/{style}/{room}.jpg，按风格+房间映射 */
+function mockImageUrl(style?: string, prompt?: string): string {
   const preset = STYLE_PRESETS.find((s) => s.id === style);
-  return `/mock/${preset ? preset.id : "modern"}.jpg`;
+  const room = detectRoom(prompt ?? "");
+  return `/mock/${preset ? preset.id : "modern"}/${room}.jpg`;
 }
 
 export function isMockMode(): boolean {
@@ -70,7 +89,7 @@ export async function createGeneration({
     const imagePrompt =
       `photorealistic interior design rendering, ${preset ? preset.label + " style, " : ""}` +
       `${clean}, professional architecture visualization, warm natural lighting`;
-    const imageUrl = mockImageUrl(style);
+    const imageUrl = mockImageUrl(style, clean);
     const updated = await query<GenerationRow>(
       `UPDATE generations
          SET status = 'succeeded',
