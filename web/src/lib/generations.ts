@@ -28,8 +28,11 @@ export interface GenerationRow {
 const RETURN_COLUMNS =
   "id, user_id, prompt, prompt_en, status, image_url, error, to_char(created_at, 'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') AS created_at";
 
-const MOCK_IMAGE_ENDPOINT =
-  "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image";
+/** Mock 模式成品图：站点内置风格示例图（public/mock/{style}.jpg），按风格映射 */
+function mockImageUrl(style?: string): string {
+  const preset = STYLE_PRESETS.find((s) => s.id === style);
+  return `/mock/${preset ? preset.id : "modern"}.jpg`;
+}
 
 export function isMockMode(): boolean {
   return process.env.MOCK_SERVICES === "true";
@@ -67,9 +70,7 @@ export async function createGeneration({
     const imagePrompt =
       `photorealistic interior design rendering, ${preset ? preset.label + " style, " : ""}` +
       `${clean}, professional architecture visualization, warm natural lighting`;
-    const imageUrl =
-      `${MOCK_IMAGE_ENDPOINT}?prompt=${encodeURIComponent(imagePrompt)}` +
-      `&image_size=landscape_4_3`;
+    const imageUrl = mockImageUrl(style);
     const updated = await query<GenerationRow>(
       `UPDATE generations
          SET status = 'succeeded',
