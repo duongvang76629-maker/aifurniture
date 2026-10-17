@@ -21,12 +21,13 @@ export interface GenerationRow {
   prompt_en: string | null;
   status: GenerationStatus;
   image_url: string | null;
+  source_image_url: string | null;
   error: string | null;
   created_at: string;
 }
 
 const RETURN_COLUMNS =
-  "id, user_id, prompt, prompt_en, status, image_url, error, to_char(created_at, 'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') AS created_at";
+  "id, user_id, prompt, prompt_en, status, image_url, source_image_url, error, to_char(created_at, 'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') AS created_at";
 
 /** 房间类型关键词映射：按优先级排序，先匹配先返回 */
 const ROOM_KEYWORDS: Array<{ room: string; pattern: RegExp }> = [
@@ -61,15 +62,17 @@ export interface CreateGenerationInput {
   prompt: string;
   style?: string;
   userId?: string | null;
+  sourceImageUrl?: string | null;
 }
 
 export async function createGeneration({
   prompt,
   style,
   userId,
+  sourceImageUrl,
 }: CreateGenerationInput): Promise<GenerationRow> {
   const clean = prompt.trim();
-  if (!clean) throw new ValidationError("请输入空间描述");
+  if (!clean && !sourceImageUrl) throw new ValidationError("请输入空间描述或上传户型图");
   if (clean.length > 1000) {
     throw new ValidationError("描述过长，最多 1000 字");
   }
@@ -77,10 +80,10 @@ export async function createGeneration({
 
   // 1. 先落库 queued
   const inserted = await query<GenerationRow>(
-    `INSERT INTO generations (user_id, prompt, status)
-     VALUES ($1, $2, 'queued')
+    `INSERT INTO generations (user_id, prompt, status, source_image_url)
+     VALUES ($1, $2, 'queued', $3)
      RETURNING ${RETURN_COLUMNS}`,
-    [userId ?? null, clean]
+    [userId ?? null, clean, sourceImageUrl ?? null]
   );
   const row = inserted.rows[0];
 
@@ -106,7 +109,15 @@ export async function createGeneration({
   // 2b. 真实链路：发起 Replicate 预测，等待 webhook 回写
   try {
     const englishPrompt = preset ? `${preset.prompt}, ${clean}` : clean;
-    const prediction = await startGeneration({ prompt: englishPrompt });
+    const extraInput: Record<string, unknown> = {};
+    if (sourceImageUrl) {
+      extraInput.image = sourceImageUrl;
+      extraInput.prompt = englishPrompt;
+    }
+    const prediction = await startGeneration({
+      prompt: englishPrompt,
+      extraInput: Object.keys(extraInput).length > 0 ? extraInput : undefined,
+    });
     const updated = await query<GenerationRow>(
       `UPDATE generations
          SET status = 'processing',

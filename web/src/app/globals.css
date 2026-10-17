@@ -235,6 +235,56 @@ code {
 .btn.ghost:hover { color: var(--text); border-color: var(--amber); }
 
 /* ============================================================================
+ * 户型图上传
+ * ==========================================================================*/
+.floorplan-upload { margin-top: 14px; }
+.upload-label {
+  display: block; border: 1.5px dashed var(--border); border-radius: 13px;
+  background: rgba(14, 12, 10, 0.35); cursor: pointer; overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+}
+.upload-label:hover { border-color: rgba(232, 163, 92, 0.45); }
+.upload-label.has-file { border-style: solid; border-color: rgba(232, 163, 92, 0.35); }
+.upload-input { display: none; }
+.upload-placeholder {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 26px 16px; color: var(--text-3); text-align: center;
+}
+.upload-icon { font-size: 24px; color: var(--text-3); line-height: 1; }
+.upload-text { font-size: 14px; color: var(--text-2); }
+.upload-hint { font-size: 12px; color: var(--text-3); }
+.upload-preview {
+  position: relative; display: flex; align-items: center; gap: 14px;
+  padding: 10px 14px;
+}
+.upload-preview img {
+  width: 72px; height: 54px; object-fit: cover; border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.upload-remove {
+  position: absolute; top: 6px; right: 6px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(14, 12, 10, 0.75); color: var(--text);
+  border: 1px solid var(--border); font-size: 14px; line-height: 1;
+  display: grid; place-items: center; cursor: pointer;
+}
+.upload-remove:hover { background: rgba(232, 163, 92, 0.2); border-color: var(--amber); }
+
+/* ============================================================================
+ * 模态中的户型图引用
+ * ==========================================================================*/
+.modal-source {
+  margin-bottom: 14px; font-size: 13px; color: var(--text-2);
+}
+.modal-source-label { margin-right: 8px; }
+.modal-source-img {
+  max-width: 180px; max-height: 120px; object-fit: cover;
+  border-radius: 8px; border: 1px solid var(--border);
+  vertical-align: middle; transition: opacity 0.2s;
+}
+.modal-source a:hover .modal-source-img { opacity: 0.85; }
+
+/* ============================================================================
  * 响应式
  * ==========================================================================*/
 @media (max-width: 640px) {

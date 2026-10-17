@@ -18,8 +18,10 @@ export default function StudioClient({
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<GenerationRow | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const canSubmit = prompt.trim().length > 0 && !submitting;
+  const canSubmit = (prompt.trim().length > 0 || selectedFile) && !submitting;
 
   // 是否有未完成任务 → 启动轮询让 processing/queued → succeeded 自动更新
   const hasPending = items.some(
@@ -72,15 +74,29 @@ export default function StudioClient({
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch("/api/generations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, style }),
-      });
+      let res: Response;
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("prompt", prompt.trim());
+        formData.append("style", style);
+        formData.append("image", selectedFile);
+        res = await fetch("/api/generations", {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        res = await fetch("/api/generations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt, style }),
+        });
+      }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `请求失败（${res.status}）`);
       setItems((prev) => [data.generation as GenerationRow, ...prev]);
       setPrompt("");
+      setSelectedFile(null);
+      setPreviewUrl(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -93,6 +109,31 @@ export default function StudioClient({
       e.preventDefault();
       void handleSubmit();
     }
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  }
+
+  function removeFile() {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  }
+
+  function handleDragOver(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
   }
 
   async function handleDownload() {
@@ -181,6 +222,40 @@ export default function StudioClient({
           placeholder="例如：15 平米的小客厅，想要温馨明亮、收纳充足，有一张三人沙发和投影仪……"
         />
 
+        <div className="floorplan-upload">
+          <label
+            className={`upload-label${previewUrl ? " has-file" : ""}`}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+          >
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="upload-input"
+            />
+            {previewUrl ? (
+              <div className="upload-preview">
+                <img src={previewUrl} alt="户型图预览" />
+                <button
+                  type="button"
+                  className="upload-remove"
+                  onClick={removeFile}
+                  aria-label="移除图片"
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <div className="upload-placeholder">
+                <span className="upload-icon">+</span>
+                <span className="upload-text">上传户型图（可选）</span>
+                <span className="upload-hint">支持 JPG / PNG / WebP，最大 10MB</span>
+              </div>
+            )}
+          </label>
+        </div>
+
         <div className="composer-foot">
           <span className="form-error">{error}</span>
           <button
@@ -266,6 +341,22 @@ export default function StudioClient({
             )}
             <div className="modal-body">
               <p className="modal-prompt">{selected.prompt}</p>
+              {selected.source_image_url && (
+                <div className="modal-source">
+                  <span className="modal-source-label">户型图：</span>
+                  <a
+                    href={selected.source_image_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <img
+                      src={selected.source_image_url}
+                      alt="户型图"
+                      className="modal-source-img"
+                    />
+                  </a>
+                </div>
+              )}
               <div className="modal-meta">
                 <span>状态：{selected.status}</span>
                 {selected.prompt_en && (
