@@ -46,12 +46,17 @@ export async function POST(req: Request) {
     let prompt = "";
     let style: string | undefined;
     let sourceImageUrl: string | null = null;
+    let annotations: string | null = null;
 
     const contentType = req.headers.get("content-type") ?? "";
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
       prompt = (formData.get("prompt") as string) ?? "";
       style = (formData.get("style") as string) ?? undefined;
+      const annotationsRaw = formData.get("annotations");
+      if (typeof annotationsRaw === "string" && annotationsRaw.trim()) {
+        annotations = annotationsRaw;
+      }
       const image = formData.get("image") as File | null;
       if (image && image.size > 0) {
         if (image.size > 10 * 1024 * 1024) {
@@ -60,18 +65,35 @@ export async function POST(req: Request) {
             { status: 400 }
           );
         }
-        sourceImageUrl = await uploadFloorplan(image);
+        try {
+          sourceImageUrl = await uploadFloorplan(image);
+        } catch (uploadErr) {
+          console.error("floorplan upload failed:", uploadErr);
+          return NextResponse.json(
+            {
+              error:
+                "户型图存储服务暂时不可用，请稍后重试；若持续出现，请联系管理员检查图床配置。",
+              code: "storage_unavailable",
+            },
+            { status: 502 }
+          );
+        }
       }
     } else {
       const body = (await req.json().catch(() => ({}))) as {
         prompt?: unknown;
         style?: unknown;
         sourceImageUrl?: unknown;
+        annotations?: unknown;
       };
       prompt = typeof body.prompt === "string" ? body.prompt : "";
       style = typeof body.style === "string" ? body.style : undefined;
       sourceImageUrl =
         typeof body.sourceImageUrl === "string" ? body.sourceImageUrl : null;
+      annotations =
+        typeof body.annotations === "string" && body.annotations.trim()
+          ? body.annotations
+          : null;
     }
 
     const generation = await createGeneration({
@@ -79,6 +101,7 @@ export async function POST(req: Request) {
       style,
       userId,
       sourceImageUrl,
+      annotations,
     });
     return NextResponse.json(
       { generation, mock: isMockMode() },

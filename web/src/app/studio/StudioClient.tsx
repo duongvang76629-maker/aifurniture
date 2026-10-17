@@ -3,6 +3,15 @@
 import { useEffect, useState } from "react";
 import { STYLE_PRESETS } from "@/configs/styles";
 import type { GenerationRow } from "@/lib/generations";
+import {
+  parseAnnotations,
+  hasAnnotations,
+  summarizeAnnotationsZh,
+  type Annotations,
+} from "@/lib/annotations";
+import FloorplanAnnotator, {
+  AnnotationsLayer,
+} from "./FloorplanAnnotator";
 
 export default function StudioClient({
   initial,
@@ -20,6 +29,8 @@ export default function StudioClient({
   const [downloading, setDownloading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [annotations, setAnnotations] = useState<Annotations | null>(null);
+  const [annotatorOpen, setAnnotatorOpen] = useState(false);
 
   const canSubmit = (prompt.trim().length > 0 || selectedFile) && !submitting;
 
@@ -80,6 +91,9 @@ export default function StudioClient({
         formData.append("prompt", prompt.trim());
         formData.append("style", style);
         formData.append("image", selectedFile);
+        if (annotations && hasAnnotations(annotations)) {
+          formData.append("annotations", JSON.stringify(annotations));
+        }
         res = await fetch("/api/generations", {
           method: "POST",
           body: formData,
@@ -97,6 +111,8 @@ export default function StudioClient({
       setPrompt("");
       setSelectedFile(null);
       setPreviewUrl(null);
+      setAnnotations(null);
+      setAnnotatorOpen(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -116,11 +132,13 @@ export default function StudioClient({
     if (!file) return;
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
+    setAnnotations(null);
   }
 
   function removeFile() {
     setSelectedFile(null);
     setPreviewUrl(null);
+    setAnnotations(null);
   }
 
   function handleDrop(e: React.DragEvent<HTMLLabelElement>) {
@@ -129,6 +147,7 @@ export default function StudioClient({
     if (file && file.type.startsWith("image/")) {
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
+      setAnnotations(null);
     }
   }
 
@@ -237,10 +256,34 @@ export default function StudioClient({
             {previewUrl ? (
               <div className="upload-preview">
                 <img src={previewUrl} alt="户型图预览" />
+                <div className="upload-info">
+                  <span className="upload-filename">
+                    {selectedFile?.name || "户型图"}
+                  </span>
+                  <button
+                    type="button"
+                    className={`upload-annotate-btn${
+                      annotations && hasAnnotations(annotations) ? " done" : ""
+                    }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setAnnotatorOpen(true);
+                    }}
+                  >
+                    {annotations && hasAnnotations(annotations)
+                      ? `✓ 已标注（${
+                          annotations.rooms.length + annotations.points.length
+                        } 项）· 修改`
+                      : "标注户型"}
+                  </button>
+                </div>
                 <button
                   type="button"
                   className="upload-remove"
-                  onClick={removeFile}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    removeFile();
+                  }}
                   aria-label="移除图片"
                 >
                   ×
@@ -343,18 +386,36 @@ export default function StudioClient({
               <p className="modal-prompt">{selected.prompt}</p>
               {selected.source_image_url && (
                 <div className="modal-source">
-                  <span className="modal-source-label">户型图：</span>
-                  <a
-                    href={selected.source_image_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <img
-                      src={selected.source_image_url}
-                      alt="户型图"
-                      className="modal-source-img"
-                    />
-                  </a>
+                  <span className="modal-source-label">
+                    户型图{hasAnnotations(parseAnnotations(selected.annotations))
+                      ? "（含标注）"
+                      : ""}：
+                  </span>
+                  <div className="anno-wrap">
+                    <a
+                      href={selected.source_image_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={selected.source_image_url}
+                        alt="户型图"
+                        className="modal-source-img"
+                      />
+                    </a>
+                    {(() => {
+                      const a = parseAnnotations(selected.annotations);
+                      return a && hasAnnotations(a) ? (
+                        <>
+                          <AnnotationsLayer data={a} />
+                          <p className="modal-anno-summary">
+                            {summarizeAnnotationsZh(a)}
+                          </p>
+                        </>
+                      ) : null;
+                    })()}
+                  </div>
                 </div>
               )}
               <div className="modal-meta">
@@ -386,6 +447,18 @@ export default function StudioClient({
             </div>
           </div>
         </div>
+      )}
+
+      {annotatorOpen && previewUrl && (
+        <FloorplanAnnotator
+          imageUrl={previewUrl}
+          initial={annotations}
+          onSave={(a) => {
+            setAnnotations(a);
+            setAnnotatorOpen(false);
+          }}
+          onClose={() => setAnnotatorOpen(false)}
+        />
       )}
     </main>
   );

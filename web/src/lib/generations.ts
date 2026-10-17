@@ -6,6 +6,12 @@
 import { query } from "@/lib/db";
 import { startGeneration } from "@/lib/replicate";
 import { STYLE_PRESETS } from "@/configs/styles";
+import {
+  parseAnnotations,
+  summarizeAnnotationsEn,
+  summarizeAnnotationsZh,
+  hasAnnotations,
+} from "@/lib/annotations";
 
 export { STYLE_PRESETS } from "@/configs/styles";
 
@@ -22,12 +28,13 @@ export interface GenerationRow {
   status: GenerationStatus;
   image_url: string | null;
   source_image_url: string | null;
+  annotations: string | null;
   error: string | null;
   created_at: string;
 }
 
 const RETURN_COLUMNS =
-  "id, user_id, prompt, prompt_en, status, image_url, source_image_url, error, to_char(created_at, 'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') AS created_at";
+  "id, user_id, prompt, prompt_en, status, image_url, source_image_url, annotations, error, to_char(created_at, 'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') AS created_at";
 
 /** 房间类型关键词映射：按优先级排序，先匹配先返回 */
 const ROOM_KEYWORDS: Array<{ room: string; pattern: RegExp }> = [
@@ -48,9 +55,22 @@ function detectRoom(prompt: string): string {
 }
 
 /** Mock 模式成品图：public/mock/{style}/{room}.jpg，按风格+房间映射 */
-function mockImageUrl(style?: string, prompt?: string): string {
+function mockImageUrl(
+  style?: string,
+  prompt?: string,
+  annotations?: ReturnType<typeof parseAnnotations>
+): string {
   const preset = STYLE_PRESETS.find((s) => s.id === style);
-  const room = detectRoom(prompt ?? "");
+  const text = prompt ?? "";
+  const matchedInText = ROOM_KEYWORDS.some((k) => k.pattern.test(text));
+  let room = detectRoom(text);
+  // 文字没有明确房间词时，退回到户型图标注里的第一个可出图房间
+  if (!matchedInText && annotations) {
+    const labeled = annotations.rooms.find((r) =>
+      ["living", "bedroom", "kitchen", "dining", "study", "bathroom"].includes(r.label)
+    );
+    if (labeled) room = labeled.label;
+  }
   return `/mock/${preset ? preset.id : "modern"}/${room}.jpg`;
 }
 
@@ -63,6 +83,8 @@ export interface CreateGenerationInput {
   style?: string;
   userId?: string | null;
   sourceImageUrl?: string | null;
+  /** 户型图标注 JSON 字符串 */
+  annotations?: string | null;
 }
 
 export async function createGeneration({
@@ -70,29 +92,35 @@ export async function createGeneration({
   style,
   userId,
   sourceImageUrl,
+  annotations,
 }: CreateGenerationInput): Promise<GenerationRow> {
   const clean = prompt.trim();
   if (!clean && !sourceImageUrl) throw new ValidationError("请输入空间描述或上传户型图");
   if (clean.length > 1000) {
     throw new ValidationError("描述过长，最多 1000 字");
   }
+  if (annotations && annotations.length > 50000) {
+    throw new ValidationError("标注数据过大");
+  }
   const preset = STYLE_PRESETS.find((s) => s.id === style);
+  const marked = parseAnnotations(annotations);
 
   // 1. 先落库 queued
   const inserted = await query<GenerationRow>(
-    `INSERT INTO generations (user_id, prompt, status, source_image_url)
-     VALUES ($1, $2, 'queued', $3)
+    `INSERT INTO generations (user_id, prompt, status, source_image_url, annotations)
+     VALUES ($1, $2, 'queued', $3, $4)
      RETURNING ${RETURN_COLUMNS}`,
-    [userId ?? null, clean, sourceImageUrl ?? null]
+    [userId ?? null, clean, sourceImageUrl ?? null, hasAnnotations(marked) ? annotations : null]
   );
   const row = inserted.rows[0];
 
   // 2a. Mock 模式：直接构造成品图并置 succeeded
   if (isMockMode()) {
+    const zhLayout = marked && hasAnnotations(marked) ? `；${summarizeAnnotationsZh(marked)}` : "";
     const imagePrompt =
       `photorealistic interior design rendering, ${preset ? preset.label + " style, " : ""}` +
-      `${clean}, professional architecture visualization, warm natural lighting`;
-    const imageUrl = mockImageUrl(style, clean);
+      `${clean}${zhLayout}, professional architecture visualization, warm natural lighting`;
+    const imageUrl = mockImageUrl(style, clean, marked);
     const updated = await query<GenerationRow>(
       `UPDATE generations
          SET status = 'succeeded',
@@ -108,11 +136,13 @@ export async function createGeneration({
 
   // 2b. 真实链路：发起 Replicate 预测，等待 webhook 回写
   try {
-    const englishPrompt = preset ? `${preset.prompt}, ${clean}` : clean;
+    let englishPrompt = preset ? `${preset.prompt}, ${clean}` : clean;
+    if (marked && hasAnnotations(marked)) {
+      englishPrompt = `${englishPrompt}. ${summarizeAnnotationsEn(marked)}`;
+    }
     const extraInput: Record<string, unknown> = {};
     if (sourceImageUrl) {
       extraInput.image = sourceImageUrl;
-      extraInput.prompt = englishPrompt;
     }
     const prediction = await startGeneration({
       prompt: englishPrompt,

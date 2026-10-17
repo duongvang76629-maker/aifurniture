@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS generations (
                 CHECK (status IN ('queued','processing','succeeded','failed')),
   replicate_id  TEXT,                          -- Replicate prediction id
   image_url     TEXT,                          -- R2 上的成品图地址
+  source_image_url TEXT,                       -- 用户上传的户型图/参考图地址
+  annotations   TEXT,                          -- 户型图标注 JSON（房间框/玄关/门窗点）
   r2_key        TEXT,                          -- R2 对象 key
   error         TEXT,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
